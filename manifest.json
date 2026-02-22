@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "InvExt",
+  "version": "1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "invext@ahmt.me"
+    }
+  },
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["*://*.aliexpress.com/*", "https://*.inventree_todo/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [{
+    "matches": ["*://*.aliexpress.com/p/order/index.html*", "*://*.aliexpress.com/p/order/history*"],
+    "js": ["content.js"],
+    "css": ["styles.css"]
+  }]
+} 
