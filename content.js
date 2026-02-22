@@ -1,14 +1,128 @@
-const INVENTREE_URL = "http://192.168.1.XX:8080";
-const API_TOKEN = "your_token_here";
+const STORAGE_KEYS = ["invUrl", "invToken", "invUser"];
 console.log("##InvExt loaded##");
 
-// 1. Create the Sidebar UI
-const sidebar = document.createElement("div");
-sidebar.id = "inventree-sidebar";
-sidebar.innerHTML = '<h3>InvenTree Queue test</h3><div id="item-list"></div>';
-document.body.appendChild(sidebar);
+// Main UI Initializer
+async function initSidebar() {
+  const settings = await chrome.storage.local.get(STORAGE_KEYS);
 
-// 2. The Scraper Function
+  // Create Sidebar container if it doesn't exist
+  let sidebar = document.getElementById("inventree-sidebar");
+  if (!sidebar) {
+    sidebar = document.createElement("div");
+    sidebar.id = "inventree-sidebar";
+    document.body.appendChild(sidebar);
+  }
+
+  // State 1: We have a token, let's verify it
+  if (settings.invUrl && settings.invToken) {
+    sidebar.innerHTML = "<p>Verifying connection...</p>";
+    const isValid = await verifyToken(settings.invUrl, settings.invToken);
+
+    if (isValid) {
+      renderActiveUI(settings.invUrl);
+      return;
+    }
+  }
+
+  // State 2: No token or invalid, show Login
+  renderLoginUI(settings.invUrl, settings.invUser);
+}
+
+async function verifyToken(url, token) {
+  try {
+    const res = await fetch(`${url}/api/user/me/`, {
+      headers: { Authorization: `Token ${token}` },
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function renderLoginUI(savedUrl = "", savedUser = "") {
+  const sidebar = document.getElementById("inventree-sidebar");
+  sidebar.innerHTML = `
+        <h2 style="margin-top:0">InvenTree Connect</h2>
+        <div class="inv-form-group">
+            <label>InvenTree Server URL</label>
+            <input type="text" id="form-url" class="inv-input" value="${savedUrl}" placeholder="http://192.168.1.50:8080">
+        </div>
+        <div class="inv-form-group">
+            <label>Username</label>
+            <input type="text" id="form-user" class="inv-input" value="${savedUser}">
+        </div>
+        <div class="inv-form-group">
+            <label>Password</label>
+            <input type="password" id="form-pass" class="inv-input">
+        </div>
+        <button id="btn-connect" class="inv-btn">Connect & Authorize</button>
+        <div id="login-err" class="inv-error"></div>
+    `;
+
+  document.getElementById("btn-connect").onclick = async () => {
+    const url = document.getElementById("form-url").value.replace(/\/$/, "");
+    const user = document.getElementById("form-user").value;
+    const pass = document.getElementById("form-pass").value;
+    const errDiv = document.getElementById("login-err");
+
+    errDiv.innerText = "Authenticating...";
+
+    try {
+      // Create the Basic Auth header: "Basic <base64(user:pass)>"
+      const credentials = btoa(`${user}:${pass}`);
+
+      const response = await fetch(`${url}/api/user/token/`, {
+        method: "GET", // Per documentation
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+            if (response.status === 401) throw new Error("Incorrect username or password");
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+      const result = await response.json(); // InvenTree returns {token: "..."}
+
+      // 2. Save everything to storage
+      await chrome.storage.local.set({
+        invUrl: url,
+        invToken: result.token,
+        invUser: user,
+      });
+
+      initSidebar(); // Reload UI
+    } catch (err) {
+      errDiv.innerText = err.message;
+    }
+  };
+}
+
+function renderActiveUI(url) {
+  const sidebar = document.getElementById("inventree-sidebar");
+  sidebar.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0">InvenTree Queue</h3>
+            <button id="btn-logout" style="font-size:10px; border:none; background:none; color:#999; cursor:pointer;">Logout</button>
+        </div>
+        <div style="font-size:11px; color:#28a745; margin-bottom:15px;">● Connected to ${url.replace("http://", "")}</div>
+        <div id="item-list"></div>
+    `;
+
+  document.getElementById("btn-logout").onclick = () => {
+    chrome.storage.local.clear();
+    location.reload();
+  };
+
+  // Initialize the mutation observer and scraper
+  const observer = new MutationObserver(scrapeOrders);
+  observer.observe(document.body, { childList: true, subtree: true });
+  scrapeOrders();
+}
+
+// The Scraper Function for AliExpress
 function scrapeOrders() {
   console.log("scrapeOrders called..");
   const itemList = document.getElementById("item-list");
@@ -72,10 +186,11 @@ function scrapeOrders() {
   });
 }
 
-// 3. API Communication
+// InvenTree Communication
 async function sendToInvenTree(id, fullTitle, imgUrl) {
   const cleanName = document.getElementById(`name-${id}`).value;
 
+  // TODO: get url and token from settings
   try {
     const response = await fetch(`${INVENTREE_URL}/api/part/`, {
       method: "POST",
@@ -103,7 +218,4 @@ async function sendToInvenTree(id, fullTitle, imgUrl) {
   }
 }
 
-// 4. Watch for page changes (AliExpress is dynamic)
-const observer = new MutationObserver(scrapeOrders);
-observer.observe(document.body, { childList: true, subtree: true });
-scrapeOrders();
+initSidebar();

@@ -8,7 +8,7 @@
     }
   },
   "permissions": ["storage", "activeTab"],
-  "host_permissions": ["*://*.aliexpress.com/*", "https://*.inventree_todo/*"],
+  "host_permissions": ["*://*.aliexpress.com/*"],
   "action": {
     "default_popup": "popup.html"
   },
