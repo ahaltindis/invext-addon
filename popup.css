@@ -130,6 +130,9 @@ body {
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #ddd;
+}
+
+.item-card .item-main {
   display: flex;
   gap: 10px;
 }
@@ -188,4 +191,19 @@ body {
 
 .item-card.synced .btn-send {
   background: #28a745;
+}
+
+.item-card.error {
+  background: #ffebee;
+  border-color: #ffcdd2;
+}
+
+.item-card.error .btn-send {
+  background: #f44336;
+}
+
+.item-error {
+  color: #d32f2f;
+  font-size: 11px;
+  margin-top: 5px;
 }

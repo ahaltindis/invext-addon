@@ -106,13 +106,15 @@ function renderActiveUI(settings) {
           .map(
             (item) => `
         <div class="item-card ${item.addedToInvenTree ? "synced" : ""}" id="card-${item.id}">
-          <img src="${item.imgUrl}">
-          <div class="info">
-            <input type="text" value="${item.title.substring(0, 50)}" id="name-${item.id}" title="${item.title}">
-            <div class="meta">SKU: ${item.sku} | Qty: ${item.qty}</div>
-            <button class="btn-send" data-id="${item.id}" ${item.addedToInvenTree ? "disabled" : ""}>
-              ${item.addedToInvenTree ? "Added!" : "Add to InvenTree"}
-            </button>
+         <div class="item-main">
+            <img src="${item.imgUrl}">
+            <div class="info">
+              <input type="text" value="${item.title.substring(0, 50)}" id="name-${item.id}" title="${item.title}">
+              <div class="meta">SKU: ${item.sku} | Qty: ${item.qty}</div>
+              <button class="btn-send" data-id="${item.id}" ${item.addedToInvenTree ? "disabled" : ""}>
+                ${item.addedToInvenTree ? "Added!" : "Add to InvenTree"}
+              </button>
+            </div>
           </div>
         </div>
       `,
@@ -144,7 +146,9 @@ function renderActiveUI(settings) {
   };
 
   document.querySelectorAll(".btn-send").forEach((btn) => {
-    btn.onclick = () => sendToInvenTree(btn.dataset.id, settings);
+    btn.onclick = () => {
+      sendToInvenTree(btn.dataset.id, settings);
+    };
   });
 }
 
@@ -152,8 +156,13 @@ async function sendToInvenTree(id, settings) {
   const cleanName = document.getElementById(`name-${id}`).value;
   const items = settings.items;
   const item = items.find((i) => i.id === id);
+  const btn = document.querySelector(`button[data-id="${id}"]`);
+  const card = document.getElementById(`card-${id}`);
 
   if (!item) return;
+
+  btn.disabled = true;
+  btn.innerText = "Sending...";
 
   try {
     const response = await fetch(`${settings.url}/api/part/`, {
@@ -176,13 +185,26 @@ async function sendToInvenTree(id, settings) {
       item.addedToInvenTree = true;
       await chrome.storage.local.set({ invScrapedItems: items });
 
-      const card = document.getElementById(`card-${id}`);
       card.classList.add("synced");
-      card.querySelector(".btn-send").innerText = "Added!";
-      card.querySelector(".btn-send").disabled = true;
+      btn.innerText = "Added!";
+    } else {
+      const errorData = await response.json();
+      const errorMsg = Object.values(errorData).flat().join(", ");
+      btn.innerText = "Retry";
+      card.classList.add("error");
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "item-error";
+      errorDiv.innerText = errorMsg;
+      card.appendChild(errorDiv);
+      btn.disabled = false;
     }
   } catch (err) {
-    console.error("InvenTree Error:", err);
+    btn.innerText = "Retry";
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "item-error";
+    errorDiv.innerText = err.message;
+    card.appendChild(errorDiv);
+    btn.disabled = false;
   }
 }
 
