@@ -1,9 +1,9 @@
-# InvExt (Inventory Extension)
+# InvExt (Inventory Extension) Browser Add-on
 
-Browser extension to import AliExpress orders into [InvenTree](https://github.com/inventree/InvenTree).
+Browser extension to import orders into [InvenTree](https://github.com/inventree/InvenTree).
 
 ## Features
-- Automatically scrapes orders from AliExpress order pages
+- Automatically scrapes orders currently from AliExpress order pages
 - Stores scraped items locally
 - Push items to InvenTree as new parts with one click
 - Badge shows count of items not yet synced
