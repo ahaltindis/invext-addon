@@ -128,7 +128,7 @@ function renderActiveUI(settings) {
     </div>
     <div class="status connected">Connected to ${settings.url.replace("http://", "")}</div>
     <div style="padding: 10px 15px;">
-      <button id="btn-clear" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px;">Clear All Items</button>
+      <button id="btn-clear" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px;">Clear List</button>
     </div>
     <div class="items-container">
       ${itemsHtml}

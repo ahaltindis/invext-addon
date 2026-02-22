@@ -164,7 +164,7 @@ body {
 }
 
 .item-card .btn-send {
-  background: #28a745;
+  background: #007bff;
   color: white;
   border: none;
   padding: 5px;
@@ -176,7 +176,7 @@ body {
 }
 
 .item-card .btn-send:hover {
-  background: #1e7e34;
+  background: #0056b3;
 }
 
 .item-card .btn-send:disabled {
