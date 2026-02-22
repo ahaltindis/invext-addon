@@ -101,7 +101,7 @@ function renderLoginUI(settings) {
 function renderActiveUI(settings) {
   const itemsHtml =
     settings.items.length === 0
-      ? `<div class="empty-state">No orders found.<br><br>Visit <a href="#" onclick="chrome.tabs.create({url: 'https://aliexpress.com/p/order/history'}); return false;">AliExpress Order History</a> to scrape orders.</div>`
+      ? `<div class="empty-state">No orders found.<br></div>`
       : settings.items
           .map(
             (item) => `
@@ -125,6 +125,9 @@ function renderActiveUI(settings) {
       <button id="btn-logout" class="logout-btn">Logout</button>
     </div>
     <div class="status connected">Connected to ${settings.url.replace("http://", "")}</div>
+    <div style="padding: 10px 15px;">
+      <button id="btn-clear" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px;">Clear All Items</button>
+    </div>
     <div class="items-container">
       ${itemsHtml}
     </div>
@@ -132,6 +135,11 @@ function renderActiveUI(settings) {
 
   document.getElementById("btn-logout").onclick = async () => {
     await chrome.storage.local.clear();
+    init();
+  };
+
+  document.getElementById("btn-clear").onclick = async () => {
+    await chrome.storage.local.set({ invScrapedItems: [] });
     init();
   };
 
