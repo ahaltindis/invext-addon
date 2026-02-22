@@ -12,9 +12,13 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "content_scripts": [{
-    "matches": ["*://*.aliexpress.com/p/order/index.html*", "*://*.aliexpress.com/p/order/history*"],
-    "js": ["content.js"],
-    "css": ["styles.css"]
-  }]
-} 
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.aliexpress.com/p/order/index.html*",
+        "*://*.aliexpress.com/p/order/history*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
